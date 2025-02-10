@@ -17,19 +17,19 @@ export async function authMiddleware(
   let newHeader = new Headers({
     Authorization: `Bearer ${accessKey}`,
   });
+  
   let checkAuth = await fetch(
-    `https://firestore.googleapis.com/v1/projects/msfassoapp/databases/(default)/documents/backofficeusers`,
+    `https://firestore.googleapis.com/v1/projects/${process.env.PROJECT_ID}/databases/(default)/documents/backofficeusers`,
     { headers: newHeader }
   )
     .then((response) => {
-      console.log(response);
+      console.log("Auth Response:", response.status);
       authResponse.status = response.status;
       authResponse.response.push(response);
-
       return authResponse;
     })
     .catch((error) => {
-      console.error(error);
+      console.error("Auth Error:", error);
       authResponse.status = 400;
       authResponse.response.push(error);
       return authResponse;
@@ -40,7 +40,10 @@ export async function authMiddleware(
     next();
   } else {
     console.log("Auth Failed.");
-    res.status(checkAuth.status).send(checkAuth.response);
+    res.status(checkAuth.status).json({
+      error: "Authentication failed",
+      details: checkAuth.response
+    });
   }
 }
 
