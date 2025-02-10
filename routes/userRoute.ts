@@ -48,13 +48,28 @@ export async function authMiddleware(
 }
 
 router.post("/backoffice/auth", async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({
+        error: "Bad Request",
+        message: "Email and password are required"
+      });
+    }
 
-  const response: ResponseType = await userDAO.getAuth(email, password);
+    const response: ResponseType = await userDAO.getAuth(email, password);
+    console.log("user:", email, " auth attempt");
 
-  console.log("user:", email, " auth ok");
-
-  res.status(response.status).send(response.response);
+    res.status(response.status).json(response.response);
+  } catch (error) {
+    console.error("Auth error:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Authentication failed",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
 });
 
 router.get("/backoffice/getuserinfo/all", authMiddleware, async (req, res) => {
@@ -70,10 +85,6 @@ router.get("/backoffice/getuserinfo/:uid", authMiddleware, async (req, res) => {
   const response = await userDAO.getUserInfo(uid);
 
   res.status(response.status).send(response.response);
-});
-
-router.all("*", (req, res, next) => {
-  res.status(500).send("Something gone wrong...");
 });
 
 export default router;
