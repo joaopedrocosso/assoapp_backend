@@ -1,5 +1,5 @@
-import { FirebaseApp } from "firebase/app";
-import { Firestore, WhereFilterOp, getFirestore } from "firebase/firestore";
+import { FirebaseApp } from 'firebase/app';
+import { Firestore, WhereFilterOp } from 'firebase/firestore';
 import {
   doc,
   query,
@@ -18,14 +18,18 @@ import { Auth, getAuth, signInWithEmailAndPassword } from "firebase/auth";
 export class FirebaseRepository {
   private app: FirebaseApp;
   private db: Firestore;
+  private adminApp: any;
+  private adminDb: any;
   private auth: Auth;
+  private storage: any;
 
-  constructor(app: FirebaseApp, db: Firestore) {
+  constructor(app: FirebaseApp, db: Firestore, adminApp: any, adminDb: any) {
     this.app = app;
     this.db = db;
-
-    this.db = getFirestore(this.app);
+    this.adminApp = adminApp;
+    this.adminDb = adminDb;
     this.auth = getAuth(this.app);
+    this.storage = getStorage(this.app);
 
     // Add a new document with a generated id.
   }
@@ -221,9 +225,8 @@ export class FirebaseRepository {
     file: Express.Multer.File
   ) {
     const uploadFileReponse: ResponseType = { status: 400, response: [] };
-    const storage = getStorage();
     const storageRef = ref(
-      storage,
+      this.storage,
       `${referencePath}/${referenceName}-${originalName}`
     );
 

@@ -1,7 +1,10 @@
-import { initializeApp, cert, ServiceAccount } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { initializeApp as initializeAdminApp, ServiceAccount } from 'firebase-admin/app';
+import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
 import { FirebaseRepository } from "../../application/services/FirebaseRepository";
 import dotenv from "dotenv";
+import { cert } from 'firebase-admin/app';
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -12,7 +15,18 @@ console.log(process.env.AUTH_DOMAIN);
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
-const serviceAccount = {
+// Regular Firebase config for client operations
+const firebaseConfig = {
+  apiKey: process.env.API_KEY,
+  authDomain: process.env.AUTH_DOMAIN,
+  projectId: process.env.PROJECT_ID,
+  storageBucket: process.env.STORAGE_BUCKET,
+  messagingSenderId: process.env.MESSAGING_SENDER_ID,
+  appId: process.env.APP_ID
+};
+
+// Admin SDK config for server operations
+const adminConfig = {
   type: "service_account",
   project_id: process.env.PROJECT_ID,
   private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
@@ -25,12 +39,17 @@ const serviceAccount = {
   client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL
 };
 
-const appFirebase = initializeApp({
-  credential: cert(serviceAccount as ServiceAccount),
+// Initialize both apps
+const appFirebase = initializeApp(firebaseConfig);
+const adminApp = initializeAdminApp({
+  credential: cert(adminConfig as ServiceAccount),
   databaseURL: process.env.FIREBASE_DATABASE_URL,
   storageBucket: process.env.STORAGE_BUCKET
 });
 
+// Get Firestore instances
 const db = getFirestore(appFirebase);
+const adminDb = getAdminFirestore(adminApp);
 
-export const database = new FirebaseRepository(appFirebase, db);
+// Export both instances
+export const database = new FirebaseRepository(appFirebase, db, adminApp, adminDb);
