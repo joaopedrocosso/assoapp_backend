@@ -1,19 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { initializeApp as initializeAdminApp, ServiceAccount } from 'firebase-admin/app';
+import { initializeApp as initializeAdminApp } from 'firebase-admin/app';
 import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
-import { FirebaseRepository } from "../../application/services/FirebaseRepository";
-import dotenv from "dotenv";
 import { cert } from 'firebase-admin/app';
-
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import dotenv from "dotenv";
 
 dotenv.config();
-console.log(process.env.API_KEY);
-console.log(process.env.AUTH_DOMAIN);
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
 // Regular Firebase config for client operations
 const firebaseConfig = {
@@ -22,7 +14,8 @@ const firebaseConfig = {
   projectId: process.env.PROJECT_ID,
   storageBucket: process.env.STORAGE_BUCKET,
   messagingSenderId: process.env.MESSAGING_SENDER_ID,
-  appId: process.env.APP_ID
+  appId: process.env.APP_ID,
+  measurementId: process.env.MEASUREMENT_ID
 };
 
 // Admin SDK config for server operations
@@ -42,8 +35,7 @@ const adminConfig = {
 // Initialize both apps
 const appFirebase = initializeApp(firebaseConfig);
 const adminApp = initializeAdminApp({
-  credential: cert(adminConfig as ServiceAccount),
-  databaseURL: process.env.FIREBASE_DATABASE_URL,
+  credential: cert(adminConfig as any),
   storageBucket: process.env.STORAGE_BUCKET
 });
 
@@ -51,5 +43,4 @@ const adminApp = initializeAdminApp({
 const db = getFirestore(appFirebase);
 const adminDb = getAdminFirestore(adminApp);
 
-// Export both instances
-export const database = new FirebaseRepository(appFirebase, db, adminApp, adminDb);
+export const database = { app: appFirebase, db, adminApp, adminDb };
